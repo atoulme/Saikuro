@@ -1119,10 +1119,12 @@ class SaikuroCMDLineRunner
   require 'fileutils'
   require 'find'
 
-  # modification to RDoc.usage that allows main_program_file to be set
-  # for RDoc.usage
-  require 'saikuro/usage'
-  RDoc::main_program_file = __FILE__
+  def initialize
+    # modification to RDoc.usage that allows main_program_file to be set
+    # for RDoc.usage
+    require 'saikuro/usage'
+    RDoc::main_program_file = __FILE__
+  end
 
   include ResultIndexGenerator
 
@@ -1222,4 +1224,23 @@ class SaikuroCMDLineRunner
     write_token_index(idx_tokens, output_dir)
   end
 
+end
+
+class SaikuroRunner
+  include ResultIndexGenerator
+  
+  def run(files, output_dir, formater = "html")
+    state_filter = Filter.new(5) # Not configurable for now.
+    token_filter = Filter.new(10, 25, 50) # Not configurable for now.
+    if formater =~ /html/i
+      state_formater = StateHTMLComplexityFormater.new(STDOUT,state_filter)
+      token_count_formater = HTMLTokenCounterFormater.new(STDOUT,token_filter)
+    else
+      state_formater = ParseStateFormater.new(STDOUT,state_filter)
+      token_count_formater = TokenCounterFormater.new(STDOUT,token_filter)
+    end
+    idx_states, idx_tokens = Saikuro.analyze(files, state_formater, token_count_formater, output_dir)
+    write_cyclo_index(idx_states, output_dir)
+    write_token_index(idx_tokens, output_dir)
+  end
 end
