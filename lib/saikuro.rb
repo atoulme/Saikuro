@@ -1226,21 +1226,79 @@ class SaikuroCMDLineRunner
 
 end
 
+#
+# A runner to call from Ruby code
+# Perfect for the inpromptue Rake task.
+# 
+#
 class SaikuroRunner
   include ResultIndexGenerator
   
+  # :call-seq:
+  #  run(files, output_dir, formater)
+  # Runs the Saikuro analyzer over the files, and persists the information
+  # in output_dir
+  #
   def run(files, output_dir, formater = "html")
-    state_filter = Filter.new(5) # Not configurable for now.
-    token_filter = Filter.new(10, 25, 50) # Not configurable for now.
-    if formater =~ /html/i
-      state_formater = StateHTMLComplexityFormater.new(STDOUT,state_filter)
-      token_count_formater = HTMLTokenCounterFormater.new(STDOUT,token_filter)
-    else
-      state_formater = ParseStateFormater.new(STDOUT,state_filter)
-      token_count_formater = TokenCounterFormater.new(STDOUT,token_filter)
-    end
-    idx_states, idx_tokens = Saikuro.analyze(files, state_formater, token_count_formater, output_dir)
-    write_cyclo_index(idx_states, output_dir)
-    write_token_index(idx_tokens, output_dir)
+    run({:formater => formater, :output_directory => output_dir, :code_dirs => files})
   end
+  
+  # :call-seq:
+  #  run(options)
+  # Runs the Saikuro analyzer over a configuration hash, which takes those arguments:
+  # - output_directory
+  #    Where the analysis will be written out
+  # - filter_cyclo
+  # - warn_cyclo
+  # - error_cyclo
+  #
+  # - filter_token
+  # - warn_token
+  # - error_token
+  #
+  # - formater
+  # text or html. By default html.
+  #
+  # - code_dirs
+  # The directories containing code to look into.
+  #
+  def run(options)
+
+        rm_rf options[:output_directory]
+
+        state_filter = Filter.new(5)
+        token_filter = Filter.new(10, 25, 50)
+
+        state_filter.limit = options[:filter_cyclo] if options[:filter_cyclo]
+        state_filter.warn = options[:warn_cyclo] if options[:warn_cyclo]
+        state_filter.error = options[:error_cyclo] if options[:error_cyclo]
+
+        token_filter.limit = options[:filter_token] if options[:filter_token]
+        token_filter.warn = options[:warn_token] if options[:warn_token]
+        token_filter.error = options[:error_token] if options[:error_token]
+
+        formater = options[:formater] || "html"
+        if formater =~ /html/i
+          state_formater = StateHTMLComplexityFormater.new(STDOUT,state_filter)
+          token_count_formater = HTMLTokenCounterFormater.new(STDOUT,token_filter)
+        else
+          state_formater = ParseStateFormater.new(STDOUT,state_filter)
+          token_count_formater = TokenCounterFormater.new(STDOUT,token_filter)
+        end
+
+        idx_states, idx_tokens = Saikuro.analyze(
+          files_in_dirs(options[:code_dirs]),
+          state_formater,
+          token_count_formater,
+          options[:output_directory]
+        )
+
+        write_cyclo_index(idx_states, options[:output_directory])
+        write_token_index(idx_tokens, options[:output_directory])
+      end
+
+      def files_in_dirs(code_dirs)
+        code_dirs = [code_dirs].flatten
+        code_dirs.collect {|dir| File.directory?(dir) ? Dir["#{dir}/**/*.rb"] : dir}.flatten
+      end
 end

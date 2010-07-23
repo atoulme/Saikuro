@@ -2,7 +2,7 @@ require 'rubygems'
 
 spec = Gem::Specification.new do |s|
   s.name = "atoulme-Saikuro"
-  s.version = "1.1.1"
+  s.version = "1.1.2"
   s.author = "Zev Blut, Antoine Toulme"
   s.email = "zb@ubit.com"
   s.homepage = "http://saikuro.rubyforge.org/"
