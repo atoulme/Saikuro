@@ -1,4 +1,4 @@
-Version 0.2
+Version 1.1.2
 
 Saikuro:
 Saikuro is a Ruby cyclomatic complexity analyzer.  When given Ruby
@@ -26,8 +26,8 @@ running.  If you are using 1.8.5 please apply this patch :
 http://www.ruby-lang.org/cgi-bin/cvsweb.cgi/ruby/lib/rdoc/ri/ri_options.rb.diff?r1=1.2.2.13;r2=1.2.2.14
 
 
-Usage:
-Saikuro is a command line program.
+=Usage:
+==Saikuro is a command line program.
 Running "saikuro -h" will output a usage statement describing all
 the various arguments you can pass to it.
 
@@ -50,8 +50,23 @@ will mark all methods with a complexity of 11 or higher with a
 warning.  Finally, "-e 16" will flag all methods with a complexity of
 16 or higher with an error.
 
+==Saikuro is also a Ruby library.
 
-About Cyclomatic Complexity:
+You can call it from your application to run metrics. 
+It's perfectly suited for a Rake task, right in the middle of your build.
+An example from Buildr:
+ gem 'atoulme-Saikuro'
+ require 'saikuro'
+ output_dir = File.expand_path(File.join(File.dirname(__FILE__), "..", "_reports", "saikuro"))
+ base_dir = Pathname.new(File.expand_path(File.join(File.dirname(__FILE__), "..")))
+ rb_files = ["lib", "addon"].collect { |folder| 
+   FileList[File.expand_path(File.join(File.dirname(__FILE__), "..", folder, "**", "*.rb"))]
+ }.flatten.collect {|path| 
+   Pathname.new(path).relative_path_from(base_dir).to_s
+ }
+ SaikuroRunner.new.run(rb_files, output_dir)
+
+=About Cyclomatic Complexity:
 
 The following document provides a very good and detailed description
 by the author of cyclomatic complexity.
@@ -121,20 +136,20 @@ Mainly, because we have not gotten around to it.  We are wondering if
 this would increase the noise more than it should.
 
 
-Tests:
+=Tests:
 In the test directory is a sample file that has examples of the
 various possible cases that we examined and documented the expected
 cyclomatic complexity result.  If you find mistakes or missing tests
 please report them.
 
-Contact:
+=Contact:
 Saikuro is written by
 Zev Blut (zb at ubit dot com)
 
-Acknowledgments:
+=Acknowledgments:
 Thanks to Elbert Corpuz for writing the CSS for the HTML output!
 
-Other metric tools for Ruby:
+=Other metric tools for Ruby:
 Ryan Davis has an abc metric program as an example in his ParseTree
 product:  http://www.zenspider.com/ZSS/Products/ParseTree/
 
