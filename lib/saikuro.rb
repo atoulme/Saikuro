@@ -730,80 +730,66 @@ end
 
 module HTMLStyleSheet
   def HTMLStyleSheet.style_sheet
-    out = StringIO.new
+<<-CSS
+<style>
+body {
+	margin: 20px;
+	padding: 0;
+	font-size: 12px;
+	font-family: bitstream vera sans, verdana, arial, sans serif;
+	background-color: #efefef;
+}
+table {	
+	border-collapse: collapse;
+	/*border-spacing: 0;*/
+	border: 1px solid #666;
+	background-color: #fff;
+	margin-bottom: 20px;
+}
+table, th, th+th, td, td+td  {
+	border: 1px solid #ccc;
+}
+table th {
+	font-size: 12px;
+	color: #fc0;
+	padding: 4px 0;
+	background-color: #336;
+}
+th, td {
+	padding: 4px 10px;
+}
+td {	
+	font-size: 13px;
+}
+.class_name {
+	font-size: 17px;
+	margin: 20px 0 0;
+}
+.class_complexity {
+margin: 0 auto;
+}
+.class_complexity>.class_complexity {
+	margin: 0;
+}
+.class_total_complexity, .class_total_lines, .start_token_count, .file_count {
+	font-size: 13px;
+	font-weight: bold;
+}
+.class_total_complexity, .class_total_lines {
+	color: #c00;
+}
+.start_token_count, .file_count {
+	color: #333;
+}
+.warning {
+	background-color: yellow;
+}
+.error {
+	background-color: #f00;
+}
+</style>
 
-    out.puts "<style>"
-    out.puts 'body {'
-    out.puts '	margin: 20px;'
-    out.puts '	padding: 0;'
-    out.puts '	font-size: 12px;'
-    out.puts '	font-family: bitstream vera sans, verdana, arial, sans serif;'
-    out.puts '	background-color: #efefef;'
-    out.puts '}'
-    out.puts ''
-    out.puts 'table {	'
-    out.puts '	border-collapse: collapse;'
-    out.puts '	/*border-spacing: 0;*/'
-    out.puts '	border: 1px solid #666;'
-    out.puts '	background-color: #fff;'
-    out.puts '	margin-bottom: 20px;'
-    out.puts '}'
-    out.puts ''
-    out.puts 'table, th, th+th, td, td+td  {'
-    out.puts '	border: 1px solid #ccc;'
-    out.puts '}'
-    out.puts ''
-    out.puts 'table th {'
-    out.puts '	font-size: 12px;'
-    out.puts '	color: #fc0;'
-    out.puts '	padding: 4px 0;'
-    out.puts '	background-color: #336;'
-    out.puts '}'
-    out.puts ''
-    out.puts 'th, td {'
-    out.puts '	padding: 4px 10px;'
-    out.puts '}'
-    out.puts ''
-    out.puts 'td {	'
-    out.puts '	font-size: 13px;'
-    out.puts '}'
-    out.puts ''
-    out.puts '.class_name {'
-    out.puts '	font-size: 17px;'
-    out.puts '	margin: 20px 0 0;'
-    out.puts '}'
-    out.puts ''
-    out.puts '.class_complexity {'
-    out.puts 'margin: 0 auto;'
-    out.puts '}'
-    out.puts ''
-    out.puts '.class_complexity>.class_complexity {'
-    out.puts '	margin: 0;'
-    out.puts '}'
-    out.puts ''
-    out.puts '.class_total_complexity, .class_total_lines, .start_token_count, .file_count {'
-    out.puts '	font-size: 13px;'
-    out.puts '	font-weight: bold;'
-    out.puts '}'
-    out.puts ''
-    out.puts '.class_total_complexity, .class_total_lines {'
-    out.puts '	color: #c00;'
-    out.puts '}'
-    out.puts ''
-    out.puts '.start_token_count, .file_count {'
-    out.puts '	color: #333;'
-    out.puts '}'
-    out.puts ''
-    out.puts '.warning {'
-    out.puts '	background-color: yellow;'
-    out.puts '}'
-    out.puts ''
-    out.puts '.error {'
-    out.puts '	background-color: #f00;'
-    out.puts '}'
-    out.puts "</style>"
-
-    out.string
+CSS
   end
 
   def style_sheet
@@ -818,9 +804,7 @@ class HTMLTokenCounterFormater < TokenCounterFormater
   def start(new_out=nil)
     reset_data
     @out = new_out if new_out
-    @out.puts "<html>"
-    @out.puts style_sheet
-    @out.puts "<body>"
+    @out.puts "<html>#{style_sheet}<body>"
   end
 
   def start_count(number_of_files)
@@ -853,8 +837,7 @@ class HTMLTokenCounterFormater < TokenCounterFormater
   end
 
   def end
-    @out.puts "</body>"
-    @out.puts "</html>"
+    @out.puts "</body>\n</html>"
   end
 end
 
