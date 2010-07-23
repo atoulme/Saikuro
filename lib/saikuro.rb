@@ -1218,11 +1218,23 @@ class SaikuroRunner
   include ResultIndexGenerator
   
   # :call-seq:
+  #  run(*args)
+  # Either runs the Saikuro analyzer over a configuration hash (see run_with_config)
+  # Or runs with standard options (in which case you need to pass files and output_dir, see run_with_standard_options)
+  def run(*args)
+    if args.size == 1
+      run_with_config(*args)
+    else
+      run_with_standard_options(*args)
+    end
+  end
+    
+  # :call-seq:
   #  run(files, output_dir, formater)
   # Runs the Saikuro analyzer over the files, and persists the information
   # in output_dir
   #
-  def run(files, output_dir, formater = "html")
+  def run_with_standard_options(files, output_dir, formater = "html")
     run({:formater => formater, :output_directory => output_dir, :code_dirs => files})
   end
   
@@ -1245,7 +1257,7 @@ class SaikuroRunner
   # - code_dirs
   # The directories containing code to look into.
   #
-  def run(options)
+  def run_with_config(options)
 
         rm_rf options[:output_directory]
 
