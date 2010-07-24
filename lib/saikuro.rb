@@ -1,6 +1,8 @@
 # Saikruo uses the BSD license.
 #
 # Copyright (c) 2005, Ubiquitous Business Technology (http://ubit.com)
+# Copyright (c) 2010, Morton Jonuschat (http://www.github.com/yabawock)
+# Copyright (c) 2010, Antoine Toulme (http://www.lunar-ocean.com)
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -36,6 +38,8 @@
 #
 # == Author
 # Zev Blut (zb@ubit.com)
+# Morton Jonuschat
+# Antoine Toulme (antoine@lunar-ocean.com)
 
 require 'irb/ruby-lex'
 require 'yaml'
