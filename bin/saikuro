@@ -90,5 +90,6 @@
 
 require 'saikuro'
 
-SaikuroCMDLineRunner.new.run
+saikuro = SaikuroCMDLineRunner.new(ARGV)
+saikuro.run!
 

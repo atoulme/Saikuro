@@ -1,52 +1,3 @@
-# $Id$
-# == Usage
-#
-# saikuro [ -h ] [-o output_directory] [-f type] [ -c, -t ]
-# [ -y, -w, -e, -k, -s, -d - number ] ( -p file | -i directory )
-#
-# == Help
-#
-# -o, --output_directory (directory) : A directory to ouput the results in.
-# The current directory is used if this option is not passed.
-#
-# -h, --help : This help message.
-#
-# -f, --formater (html | text) : The format to output the results in.
-# The default is html
-#
-# -c, --cyclo : Compute the cyclomatic complexity of the input.
-#
-# -t, --token : Count the number of tokens per line of the input.
-#
-# -y, --filter_cyclo (number) : Filter the output to only include methods
-# whose cyclomatic complexity are greater than the passed number.
-#
-# -w, --warn_cyclo (number) : Highlight with a warning methods whose
-# cyclomatic complexity are greather than or equal to the passed number.
-#
-#
-# -e, --error_cyclo (number) : Highligh with an error methods whose
-# cyclomatic complexity are greather than or equal to the passed number.
-#
-#
-# -k, --filter_token (number) : Filter the output to only include lines
-# whose token count are greater than the passed number.
-#
-#
-# -s, --warn_token (number) : Highlight with a warning lines whose
-# token count are greater than or equal to the passed number.
-#
-#
-# -d, --error_token (number) : Highlight with an error lines whose
-# token count are greater than or equal to the passed number.
-#
-#
-# -p, --parse_file (file) : A file to use as input.
-#
-# -i, --input_directory (directory) : All ruby files found recursively
-# inside the directory are passed as input.
-
-
 # Saikruo uses the BSD license.
 #
 # Copyright (c) 2005, Ubiquitous Business Technology (http://ubit.com)
@@ -1098,16 +1049,9 @@ end
 
 class SaikuroCMDLineRunner
   require 'stringio'
-  require 'getoptlong'
+  require 'optparse'
   require 'fileutils'
   require 'find'
-
-  def initialize
-    # modification to RDoc.usage that allows main_program_file to be set
-    # for RDoc.usage
-    require 'saikuro/usage'
-    RDoc::main_program_file = __FILE__
-  end
 
   include ResultIndexGenerator
 
@@ -1122,91 +1066,126 @@ class SaikuroCMDLineRunner
     end
     files
   end
+  
+  def parse(args)
+    # Set up reasonable defaults for options.
+    options = {}
+    options[:files] = Array.new
+    options[:output_dir] = './'
+    options[:formater] = 'html'
+    options[:state_filter] = Filter.new(5)
+    options[:token_filter] = Filter.new(10, 25, 50)
+    options[:comp_state] = false
+    options[:comp_token] = false
 
-  def run
-    files = Array.new
-    output_dir = "./"
-    formater = "html"
-    state_filter = Filter.new(5)
-    token_filter = Filter.new(10, 25, 50)
-    comp_state = comp_token = false
-    begin
-      opt = GetoptLong.new(
-                           ["-o","--output_directory", GetoptLong::REQUIRED_ARGUMENT],
-                           ["-h","--help", GetoptLong::NO_ARGUMENT],
-                           ["-f","--formater", GetoptLong::REQUIRED_ARGUMENT],
-                           ["-c","--cyclo", GetoptLong::NO_ARGUMENT],
-                           ["-t","--token", GetoptLong::NO_ARGUMENT],
-                           ["-y","--filter_cyclo", GetoptLong::REQUIRED_ARGUMENT],
-                           ["-k","--filter_token", GetoptLong::REQUIRED_ARGUMENT],
-                           ["-w","--warn_cyclo", GetoptLong::REQUIRED_ARGUMENT],
-                           ["-s","--warn_token", GetoptLong::REQUIRED_ARGUMENT],
-                           ["-e","--error_cyclo", GetoptLong::REQUIRED_ARGUMENT],
-                           ["-d","--error_token", GetoptLong::REQUIRED_ARGUMENT],
-                           ["-p","--parse_file", GetoptLong::REQUIRED_ARGUMENT],
-                           ["-i","--input_directory", GetoptLong::REQUIRED_ARGUMENT],
-                           ["-v","--verbose", GetoptLong::NO_ARGUMENT]
-                           )
+    # Parse the command-line arguments.
+    @opts = OptionParser.new do |opts|
+      opts.banner = 'Usage: saikuro [ -h ] [-o output_directory] [-f type] [ -c, -t ] [ -y, -w, -e, -k, -s, -d - number ] ( -p file | -i directory )'
 
-      opt.each do |arg,val|
-        case arg
-        when "-o"
-          output_dir = val
-        when "-h"
-          RDoc.usage('help')
-        when "-f"
-          formater = val
-        when "-c"
-          comp_state = true
-        when "-t"
-          comp_token = true
-        when "-k"
-          token_filter.limit = val.to_i
-        when "-s"
-          token_filter.warn = val.to_i
-        when "-d"
-          token_filter.error = val.to_i
-        when "-y"
-          state_filter.limit = val.to_i
-        when "-w"
-          state_filter.warn = val.to_i
-        when "-e"
-          state_filter.error = val.to_i
-        when "-p"
-          files<< val
-        when "-i"
-          files.concat(get_ruby_files(val))
-        when "-v"
-          STDOUT.puts "Verbose mode on"
-          $VERBOSE = true
-        end
+      opts.separator ''
+      opts.separator 'Specific options:'
 
+      opts.on('-v', '--verbose', 'Verbose output.') do
+        options[:verbose] = true
+        $VERBOSE = true
       end
-      RDoc.usage if !comp_state && !comp_token
-    rescue => err
-      RDoc.usage
+
+      opts.on('-o', '--output_directory DIRECTORY', 'A directory to ouput the results in. The current directory is used if this option is not passed.') do |output_dir|
+        options[:output_dir] = output_dir
+      end
+
+      opts.on('-f', '--formater (html | text)', 'The format to output the results in. The default is html') do |formater|
+        options[:formater] = formater
+      end
+
+      opts.on('-c', '--cyclo', 'Compute the cyclomatic complexity of the input.') do
+        options[:comp_state] = true
+      end
+
+      opts.on('-t', '--token', 'Count the number of tokens per line of the input.') do
+        options[:comp_token] = true
+      end
+
+      opts.on('-y', '--filter_cyclo NUMBER', 'Filter the output to only include methods whose cyclomatic complexity are greater than the passed number.') do |number|
+        options[:state_filter].limit = number.to_i
+      end
+
+      opts.on('-w', '--warn_cyclo NUMBER', 'Highlight with a warning methods whose cyclomatic complexity are greather than or equal to the passed number.') do |number|
+        options[:state_filter].warn = number.to_i
+      end
+
+      opts.on('-e', '--error_cyclo NUMBER', 'Highlight with a error methods whose cyclomatic complexity are greather than or equal to the passed number.') do |number|
+        options[:state_filter].error = number.to_i
+      end
+
+      opts.on('-k', '--filter_token NUMBER', 'Filter the output to only include lines whose token count are greater than the passed number.') do |number|
+        options[:token_filter].limit = number.to_i
+      end
+
+      opts.on('-s', '--warn_token NUMBER', 'Highlight with a warning lines whose token count are greather than or equal to the passed number.') do |number|
+        options[:token_filter].warn = number.to_i
+      end
+
+      opts.on('-d', '--error_token NUMBER', 'Highlight with a error lines whose token count are greather than or equal to the passed number.') do |number|
+        options[:token_filter].error = number.to_i
+      end
+
+      opts.on('-p', '--parse_file FILE', 'A file to use as input.') do |file|
+        options[:files] << file
+      end
+
+      opts.on('-i', '--input_directory DIRECTORY', 'All ruby files found recursively inside the directory are passed as input.') do |directory|
+        options[:files].concat(get_ruby_files(directory))
+      end
+
+      opts.separator ''
+
+      # No argument, shows at tail.  This will print an options summary.
+      # Try it and see!
+      opts.on_tail('-h', '--help', 'Show this message') do
+        puts opts
+        exit
+      end
     end
 
-    if formater =~ /html/i
-      state_formater = StateHTMLComplexityFormater.new(STDOUT,state_filter)
-      token_count_formater = HTMLTokenCounterFormater.new(STDOUT,token_filter)
-    else
-      state_formater = ParseStateFormater.new(STDOUT,state_filter)
-      token_count_formater = TokenCounterFormater.new(STDOUT,token_filter)
-    end
-
-    state_formater = nil if !comp_state
-    token_count_formater = nil if !comp_token
-
-    idx_states, idx_tokens = Saikuro.analyze(files,
-                                             state_formater,
-                                             token_count_formater,
-                                             output_dir)
-
-    write_cyclo_index(idx_states, output_dir)
-    write_token_index(idx_tokens, output_dir)
+    @opts.parse! args
+    options
   end
 
+  def initialize(args="-h")
+    @options = parse(args)
+    show_help_message("No input files specified") if @options[:files].empty?
+    show_help_message('Please choose token or cyclo mode') if !@options[:comp_state] && !@options[:comp_token]
+  end
+
+  def run!
+    if @options[:formater] =~ /html/i
+      state_formater = StateHTMLComplexityFormater.new(STDOUT,@options[:state_filter])
+      token_count_formater = HTMLTokenCounterFormater.new(STDOUT,@options[:token_filter])
+    else
+      state_formater = ParseStateFormater.new(STDOUT,@options[:state_filter])
+      token_count_formater = TokenCounterFormater.new(STDOUT,@options[:token_filter])
+    end
+
+    state_formater = nil if !@options[:comp_state]
+    token_count_formater = nil if !@options[:comp_token]
+
+    idx_states, idx_tokens = Saikuro.analyze(@options[:files],
+                                             state_formater,
+                                             token_count_formater,
+                                             @options[:output_dir])
+
+    write_cyclo_index(idx_states, @options[:output_dir])
+    write_token_index(idx_tokens, @options[:output_dir])
+  end
+
+  private
+  
+    def show_help_message(msg)
+      puts "Error starting script: #{msg}\n\n"
+      puts @opts.help
+      exit
+    end
 end
 
 #
