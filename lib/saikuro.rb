@@ -370,8 +370,8 @@ class ParseState
   def end_debug
     STDOUT.puts "got an end: #{@name} in #{self.class.name}" if $VERBOSE
     if @parent.nil?
-      STDOUT.puts "DEBUG: Line #{@lexer.line_no}"
-      STDOUT.puts "DEBUG: #{@name}; #{self.class}"
+      STDOUT.puts "DEBUG: Line #{@lexer.line_no}" if $VERBOSE
+      STDOUT.puts "DEBUG: #{@name}; #{self.class}" if $VERBOSE
       # to_yaml can cause an infinite loop?
       #STDOUT.puts "TOP: #{@@top_state.to_yaml}"
       #STDOUT.puts "TOP: #{@@top_state.inspect}"
