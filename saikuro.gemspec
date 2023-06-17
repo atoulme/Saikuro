@@ -54,4 +54,6 @@ spec = Gem::Specification.new do |s|
   s.executables = ['saikuro']
   s.has_rdoc = true
   s.extra_rdoc_files = ["README.rdoc"]
+  s.add_dependency 'irb', '=1.1.1'
+  s.add_dependency 'e2mmap'
 end

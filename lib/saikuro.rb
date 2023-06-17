@@ -41,6 +41,8 @@
 # Morton Jonuschat
 # Antoine Toulme (antoine@lunar-ocean.com)
 
+require 'rubygems'
+gem 'irb', '=1.1.1'
 require 'irb/ruby-lex'
 require 'yaml'
 
